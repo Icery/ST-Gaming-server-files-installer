@@ -109,9 +109,9 @@ def build_installer():
     with open(TEMPLATE_FILE, 'r', encoding='utf-8') as f:
         installer_content = f.read()
     
-    # Replace import with embedded config
+    # Replace import with embedded config (using English marker to avoid encoding issues)
     installer_content = installer_content.replace(
-        '# 從 config 讀取設定 (build.py 會將此區塊替換為 config.py 內容)\nfrom config import *',
+        '# CONFIG_IMPORT_MARKER\nfrom config import *',
         f'# ============ Config (embedded) ============\n{config_content}'
     )
     
@@ -133,7 +133,7 @@ def build_installer():
     
     print(f"\nGenerated: {OUTPUT_FILE}")
     print(f"\nBuild exe:")
-    print(f"  pyinstaller --onefile --windowed --name STG-Installer-{version} {OUTPUT_FILE}")
+    print(f"  pyinstaller --onefile --windowed --name ST-Gaming-package-{version} {OUTPUT_FILE}")
     
     return True
 

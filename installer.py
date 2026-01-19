@@ -1,3 +1,4 @@
+# installer.py
 import os
 import sys
 import tkinter as tk
@@ -8,7 +9,7 @@ import base64
 import io
 import webbrowser
 
-# 從 config 讀取設定 (build.py 會將此區塊替換為 config.py 內容)
+# CONFIG_IMPORT_MARKER
 from config import *
 
 # ============ Embedded Data (由 build.py 自動填入) ============
@@ -83,7 +84,7 @@ class InstallerApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title(f"{APP_TITLE} v{APP_VERSION}")
-        self.root.geometry("480x380")
+        self.root.geometry("520x550")  # 加大視窗
         self.root.resizable(False, False)
         
         self.install_dir = None
@@ -93,21 +94,21 @@ class InstallerApp:
     
     def center_window(self):
         self.root.update_idletasks()
-        width = self.root.winfo_width()
-        height = self.root.winfo_height()
+        width = 520
+        height = 550
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
-        self.root.geometry(f"+{x}+{y}")
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
     
     def setup_ui(self):
-        main_frame = ttk.Frame(self.root, padding=20)
+        main_frame = ttk.Frame(self.root, padding=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # 標題
         title_label = ttk.Label(
             main_frame,
             text=APP_TITLE,
-            font=("Arial", 18, "bold")
+            font=("Microsoft JhengHei", 14, "bold")
         )
         title_label.pack(pady=(0, 5))
         
@@ -122,23 +123,31 @@ class InstallerApp:
             font=("Arial", 9),
             foreground="gray"
         )
-        version_label.pack(pady=(0, 15))
+        version_label.pack(pady=(0, 10))
         
-        # 說明文字
-        desc_label = ttk.Label(
-            main_frame,
-            text=INSTALL_DESCRIPTION.strip(),
-            font=("Arial", 10),
-            justify=tk.LEFT
+        # 說明文字框
+        desc_frame = ttk.LabelFrame(main_frame, text="說明", padding=8)
+        desc_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        
+        desc_text = tk.Text(
+            desc_frame,
+            font=("Microsoft JhengHei", 9),
+            wrap=tk.WORD,
+            height=14,
+            relief=tk.FLAT,
+            bg=self.root.cget('bg'),
+            cursor="arrow"
         )
-        desc_label.pack(pady=(0, 10))
+        desc_text.insert(tk.END, INSTALL_DESCRIPTION.strip())
+        desc_text.config(state=tk.DISABLED)
+        desc_text.pack(fill=tk.BOTH, expand=True)
         
         # 檔案數量
         file_count = get_file_count()
         info_label = ttk.Label(
             main_frame,
             text=f"將安裝 {file_count} 個檔案",
-            font=("Arial", 9)
+            font=("Microsoft JhengHei", 9)
         )
         info_label.pack(pady=(0, 5))
         
@@ -150,7 +159,7 @@ class InstallerApp:
             font=("Consolas", 8),
             foreground="gray"
         )
-        self.location_label.pack(pady=(0, 15))
+        self.location_label.pack(pady=(0, 10))
         
         # 進度條
         self.progress_var = tk.DoubleVar()
@@ -158,22 +167,22 @@ class InstallerApp:
             main_frame,
             variable=self.progress_var,
             maximum=100,
-            length=400
+            length=450
         )
-        self.progress_bar.pack(pady=10)
+        self.progress_bar.pack(pady=(0, 8))
         
         # 狀態
         self.status_var = tk.StringVar(value=STATUS_READY)
         self.status_label = ttk.Label(
             main_frame,
             textvariable=self.status_var,
-            font=("Arial", 9)
+            font=("Microsoft JhengHei", 9)
         )
-        self.status_label.pack(pady=(0, 15))
+        self.status_label.pack(pady=(0, 10))
         
         # 按鈕框架
         btn_frame = ttk.Frame(main_frame)
-        btn_frame.pack(pady=10)
+        btn_frame.pack(pady=(5, 0))
         
         # 安裝按鈕
         self.install_btn = ttk.Button(
@@ -200,8 +209,8 @@ class InstallerApp:
         
         # 顯示目前路徑
         display_path = current_dir
-        if len(display_path) > 50:
-            display_path = "..." + display_path[-47:]
+        if len(display_path) > 55:
+            display_path = "..." + display_path[-52:]
         
         self.location_var.set(f"安裝位置: {display_path}")
         
@@ -218,8 +227,8 @@ class InstallerApp:
         self.progress_var.set(progress)
         
         display_name = filename
-        if len(display_name) > 40:
-            display_name = "..." + display_name[-37:]
+        if len(display_name) > 45:
+            display_name = "..." + display_name[-42:]
         
         self.status_var.set(STATUS_INSTALLING.format(filename=display_name))
         self.root.update()

@@ -1,0 +1,20 @@
+# Build outputs
+installer_built.py
+*.spec
+
+# PyInstaller
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

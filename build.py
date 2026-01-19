@@ -1,5 +1,6 @@
+# build.py
 """
-建置腳本 - 將 config.py 和檔案資料嵌入到 installer
+Build script - embeds config.py and file data into installer
 """
 
 import os
@@ -54,7 +55,6 @@ def create_zip_from_folder(folder_path):
     return buffer.getvalue()
 
 def read_config():
-    """讀取 config.py 內容"""
     with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
         return f.read()
 
@@ -69,53 +69,53 @@ def build_installer():
     print(f"\nVersion: {version}")
     print(f"Commit:  {commit}")
     
-    # 檢查必要檔案
+    # Check required files
     if not os.path.isfile(CONFIG_FILE):
-        print(f"\n錯誤: 找不到 {CONFIG_FILE}")
+        print(f"\nError: {CONFIG_FILE} not found")
         return False
     
     if not os.path.isfile(TEMPLATE_FILE):
-        print(f"\n錯誤: 找不到 {TEMPLATE_FILE}")
+        print(f"\nError: {TEMPLATE_FILE} not found")
         return False
     
-    # 檢查來源資料夾
+    # Check source folder
     if not os.path.isdir(SOURCE_DIR):
-        print(f"\n錯誤: 找不到 {SOURCE_DIR} 資料夾")
+        print(f"\nError: {SOURCE_DIR} folder not found")
         os.makedirs(SOURCE_DIR, exist_ok=True)
-        print(f"已建立 {SOURCE_DIR} 資料夾，請放入檔案後重新執行")
+        print(f"Created {SOURCE_DIR} folder, please add files and run again")
         return False
     
     file_count = sum(len(files) for _, _, files in os.walk(SOURCE_DIR))
     if file_count == 0:
-        print(f"\n錯誤: {SOURCE_DIR} 資料夾是空的")
+        print(f"\nError: {SOURCE_DIR} folder is empty")
         return False
     
-    print(f"\n打包 {file_count} 個檔案...")
+    print(f"\nPacking {file_count} files...")
     print("-" * 40)
     
-    # 壓縮檔案
+    # Compress files
     zip_data = create_zip_from_folder(SOURCE_DIR)
     b64_data = base64.b64encode(zip_data).decode('utf-8')
     
     print("-" * 40)
-    print(f"壓縮完成: {len(zip_data):,} -> {len(b64_data):,} bytes")
+    print(f"Compressed: {len(zip_data):,} -> {len(b64_data):,} bytes (base64)")
     
-    # 讀取 config
-    print(f"\n讀取 {CONFIG_FILE}...")
+    # Read config
+    print(f"\nReading {CONFIG_FILE}...")
     config_content = read_config()
     
-    # 讀取 installer 模板
-    print(f"讀取 {TEMPLATE_FILE}...")
+    # Read installer template
+    print(f"Reading {TEMPLATE_FILE}...")
     with open(TEMPLATE_FILE, 'r', encoding='utf-8') as f:
         installer_content = f.read()
     
-    # 移除 import config 那行，改為直接嵌入 config 內容
+    # Replace import with embedded config
     installer_content = installer_content.replace(
         '# 從 config 讀取設定 (build.py 會將此區塊替換為 config.py 內容)\nfrom config import *',
-        f'# ============ Config (自動嵌入) ============\n{config_content}'
+        f'# ============ Config (embedded) ============\n{config_content}'
     )
     
-    # 替換版本和資料
+    # Replace version and data
     output = installer_content.replace(
         'EMBEDDED_DATA = ""',
         f'EMBEDDED_DATA = "{b64_data}"'
@@ -127,15 +127,16 @@ def build_installer():
         f'APP_COMMIT = "{commit}"'
     )
     
-    # 寫入輸出檔
+    # Write output
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write(output)
     
-    print(f"\n產生: {OUTPUT_FILE}")
-    print(f"\n打包 exe:")
+    print(f"\nGenerated: {OUTPUT_FILE}")
+    print(f"\nBuild exe:")
     print(f"  pyinstaller --onefile --windowed --name STG-Installer-{version} {OUTPUT_FILE}")
     
     return True
 
 if __name__ == "__main__":
-    build_installer()
+    success = build_installer()
+    sys.exit(0 if success else 1)

@@ -51,7 +51,7 @@ jobs:
             
             ### 安裝方式
             1. 下載下方的 `ST-Gaming-package-${{ steps.get_version.outputs.VERSION }}.exe`
-            2. 將檔案放到伺服器資料夾（與 `hl.exe` 相同位置）
+            2. 將檔案放到正版CS1.6資料夾（與 `hl.exe` 相同位置）
             3. 執行安裝程式
             4. 完成！
           files: |

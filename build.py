@@ -1,6 +1,7 @@
 # build.py
 """
 Build script - embeds config.py and file data into installer
+Uses LZMA compression for maximum compression ratio
 """
 
 import os
@@ -9,6 +10,7 @@ import zipfile
 import base64
 import io
 import subprocess
+import lzma
 
 # ============ Config ============
 SOURCE_DIR = "source_files"
@@ -42,9 +44,11 @@ def get_git_commit():
 
 # ============ Build ============
 def create_zip_from_folder(folder_path):
+    """建立 ZIP 並用 LZMA 壓縮"""
     buffer = io.BytesIO()
     
-    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+    # 使用 LZMA 壓縮 (最高壓縮率)
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_LZMA) as zf:
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 file_path = os.path.join(root, file)
@@ -60,7 +64,7 @@ def read_config():
 
 def build_installer():
     print("=" * 50)
-    print("Building Installer")
+    print("Building Installer (LZMA Compression)")
     print("=" * 50)
     
     version = get_git_version()
@@ -85,20 +89,34 @@ def build_installer():
         print(f"Created {SOURCE_DIR} folder, please add files and run again")
         return False
     
-    file_count = sum(len(files) for _, _, files in os.walk(SOURCE_DIR))
+    # Calculate total size before compression
+    total_size = 0
+    file_count = 0
+    for root, dirs, files in os.walk(SOURCE_DIR):
+        for file in files:
+            file_path = os.path.join(root, file)
+            total_size += os.path.getsize(file_path)
+            file_count += 1
+    
     if file_count == 0:
         print(f"\nError: {SOURCE_DIR} folder is empty")
         return False
     
-    print(f"\nPacking {file_count} files...")
+    print(f"\nPacking {file_count} files ({total_size:,} bytes)...")
+    print("Using LZMA compression (this may take a while)...")
     print("-" * 40)
     
     # Compress files
     zip_data = create_zip_from_folder(SOURCE_DIR)
     b64_data = base64.b64encode(zip_data).decode('utf-8')
     
+    # Calculate compression ratio
+    ratio = (1 - len(zip_data) / total_size) * 100 if total_size > 0 else 0
+    
     print("-" * 40)
-    print(f"Compressed: {len(zip_data):,} -> {len(b64_data):,} bytes (base64)")
+    print(f"Original:   {total_size:,} bytes")
+    print(f"Compressed: {len(zip_data):,} bytes ({ratio:.1f}% smaller)")
+    print(f"Base64:     {len(b64_data):,} bytes")
     
     # Read config
     print(f"\nReading {CONFIG_FILE}...")
@@ -109,7 +127,7 @@ def build_installer():
     with open(TEMPLATE_FILE, 'r', encoding='utf-8') as f:
         installer_content = f.read()
     
-    # Replace import with embedded config (using English marker to avoid encoding issues)
+    # Replace import with embedded config
     installer_content = installer_content.replace(
         '# CONFIG_IMPORT_MARKER\nfrom config import *',
         f'# ============ Config (embedded) ============\n{config_content}'
@@ -133,7 +151,7 @@ def build_installer():
     
     print(f"\nGenerated: {OUTPUT_FILE}")
     print(f"\nBuild exe:")
-    print(f"  pyinstaller --onefile --windowed --name ST-Gaming-package-{version} {OUTPUT_FILE}")
+    print(f"  pyinstaller --onefile --windowed --icon=icon.ico --name ST-Gaming-package-{version} {OUTPUT_FILE}")
     
     return True
 

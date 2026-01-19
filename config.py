@@ -12,6 +12,13 @@ WEBSITE_URL = "https://st.icery.tw/servers/st-gaming-kz"
 # 設為 None 或 "" 則不驗證
 REQUIRED_FILE = "hl.exe"
 
+# ============ 唯讀檔案設定 ============
+# 解壓縮後要設為唯讀的檔案列表
+# 路徑相對於安裝目錄（與 source_files 內的結構相同）
+READONLY_FILES = [
+    "tempdecal.wad",
+]
+
 # ============ 安裝說明 ============
 # 顯示在安裝視窗中的說明文字
 INSTALL_DESCRIPTION = """
@@ -23,7 +30,7 @@ INSTALL_DESCRIPTION = """
 
 • 遇到問題可找Icery或小幫手們
 
-特別感謝:
+參與製作:
 - JumPoo
 - shin
 - Yanagi
@@ -47,7 +54,7 @@ COMPLETE_MESSAGE = """
 ERROR_WRONG_LOCATION = """
 找不到 {file}
 
-請將此安裝程式放到伺服器根目錄
+請將此安裝程式放到正版CS1.6根目錄
 （與 {file} 相同的資料夾）
 """
 
@@ -60,4 +67,4 @@ STATUS_READY = "準備就緒，點擊開始安裝"
 STATUS_INSTALLING = "正在安裝: {filename}"
 STATUS_COMPLETE = "安裝完成!"
 STATUS_FAILED = "安裝失敗"
-STATUS_WRONG_LOCATION = "錯誤: 請將此程式放到伺服器資料夾"
+STATUS_WRONG_LOCATION = "錯誤: 請將此程式放到正版CS1.6資料夾"

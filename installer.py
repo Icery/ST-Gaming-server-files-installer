@@ -1,6 +1,7 @@
 # installer.py
 import os
 import sys
+import stat
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
@@ -31,6 +32,15 @@ def get_embedded_data():
         return None
     return base64.b64decode(EMBEDDED_DATA)
 
+def set_readonly(file_path):
+    """設定檔案為唯讀"""
+    try:
+        # 移除寫入權限，保留讀取和執行權限
+        os.chmod(file_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        return True
+    except Exception:
+        return False
+
 def extract_files(target_dir, progress_callback=None):
     """解壓縮檔案到目標資料夾"""
     data = get_embedded_data()
@@ -38,6 +48,11 @@ def extract_files(target_dir, progress_callback=None):
         raise Exception("沒有嵌入的檔案資料")
     
     zip_buffer = io.BytesIO(data)
+    
+    # 取得唯讀檔案列表（如果有定義）
+    readonly_list = []
+    if 'READONLY_FILES' in dir():
+        readonly_list = READONLY_FILES if READONLY_FILES else []
     
     with zipfile.ZipFile(zip_buffer, 'r') as zf:
         file_list = zf.namelist()
@@ -51,9 +66,27 @@ def extract_files(target_dir, progress_callback=None):
             else:
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
                 
+                # 如果檔案已存在且是唯讀，先移除唯讀屬性才能覆蓋
+                if os.path.exists(target_path):
+                    try:
+                        os.chmod(target_path, stat.S_IRUSR | stat.S_IWUSR)
+                    except Exception:
+                        pass
+                
                 with zf.open(file_name) as source:
                     with open(target_path, 'wb') as target:
                         target.write(source.read())
+                
+                # 檢查是否需要設為唯讀
+                # 比對檔名（支援完整路徑或只有檔名）
+                for readonly_file in readonly_list:
+                    # 標準化路徑分隔符
+                    normalized_name = file_name.replace('\\', '/')
+                    normalized_readonly = readonly_file.replace('\\', '/')
+                    
+                    if normalized_name == normalized_readonly or normalized_name.endswith('/' + normalized_readonly) or normalized_name == normalized_readonly.lstrip('/'):
+                        set_readonly(target_path)
+                        break
             
             if progress_callback:
                 progress_callback(i + 1, total, file_name)
@@ -84,7 +117,7 @@ class InstallerApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title(f"{APP_TITLE} v{APP_VERSION}")
-        self.root.geometry("520x550")  # 加大視窗
+        self.root.geometry("520x550")
         self.root.resizable(False, False)
         
         self.install_dir = None

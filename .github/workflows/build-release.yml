@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -31,8 +34,13 @@ jobs:
         run: python build.py
       
       - name: Build exe
+        shell: bash
         run: |
-          pyinstaller --onefile --windowed --name "STG-Installer-${{ steps.get_version.outputs.VERSION }}" installer_built.py
+          if [ -f "icon.ico" ]; then
+            pyinstaller --onefile --windowed --icon=icon.ico --name "STG-Installer-${{ steps.get_version.outputs.VERSION }}" installer_built.py
+          else
+            pyinstaller --onefile --windowed --name "ST-Gaming-package-${{ steps.get_version.outputs.VERSION }}" installer_built.py
+          fi
       
       - name: Create Release
         uses: softprops/action-gh-release@v1

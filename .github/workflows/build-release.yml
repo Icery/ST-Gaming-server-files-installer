@@ -1,0 +1,52 @@
+# .github/workflows/build-release.yml
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      
+      - name: Get version from tag
+        id: get_version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+      - name: Build installer
+        run: python build.py
+      
+      - name: Build exe
+        run: |
+          pyinstaller --onefile --windowed --name "STG-Installer-${{ steps.get_version.outputs.VERSION }}" installer_built.py
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "v${{ steps.get_version.outputs.VERSION }}"
+          body: |
+            ## ST Gaming Server Files v${{ steps.get_version.outputs.VERSION }}
+            
+            ### 安裝方式
+            1. 下載下方的 `STG-Installer-${{ steps.get_version.outputs.VERSION }}.exe`
+            2. 將檔案放到伺服器資料夾（與 `hl.exe` 相同位置）
+            3. 執行安裝程式
+            4. 完成！
+          files: |
+            dist/STG-Installer-${{ steps.get_version.outputs.VERSION }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

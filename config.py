@@ -45,7 +45,7 @@ COMPLETE_MESSAGE = """
 檔案已成功安裝!
 版本: {version}
 
-點擊確定ST Gaming網站
+點擊確定開啟ST Gaming網站
 """
 
 # ============ 錯誤訊息 ============
